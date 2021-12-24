@@ -7,7 +7,7 @@ import tensorflow as tf
 import tf_slim as slim
 from time import time
 import logging
-
+import matplotlib.pyplot as plt
 
 tf.compat.v1.disable_eager_execution()
 logger = logging.getLogger(__name__)
@@ -25,17 +25,17 @@ class NCF:
     """
 
     def __init__(
-        self,
-        n_users,
-        n_items,
-        model_type="NeuMF",
-        n_factors=8,
-        layer_sizes=[16, 8, 4],
-        n_epochs=50,
-        batch_size=64,
-        learning_rate=5e-3,
-        verbose=1,
-        seed=None,
+            self,
+            n_users,
+            n_items,
+            model_type="NeuMF",
+            n_factors=8,
+            layer_sizes=[16, 8, 4],
+            n_epochs=50,
+            batch_size=64,
+            learning_rate=5e-3,
+            verbose=1,
+            seed=None,
     ):
         """Constructor
 
@@ -91,7 +91,7 @@ class NCF:
         self.sess.run(tf.compat.v1.global_variables_initializer())
 
     def _create_model(
-        self,
+            self,
     ):
         # reset graph
         tf.compat.v1.reset_default_graph()
@@ -223,6 +223,7 @@ class NCF:
                     ),
                 )
                 self.output = tf.sigmoid(output)
+
 
             elif self.model_type == "mlp":
                 # MLP only
@@ -366,54 +367,6 @@ class NCF:
         )
         self.sess.run(assign_op)
 
-    def fit(self, data):
-        """Fit model with training data
-
-        Args:
-            data (NCFDataset): initilized Dataset in ./dataset.py
-        """
-
-        # get user and item mapping dict
-        self.user2id = data.user2id
-        self.item2id = data.item2id
-        self.id2user = data.id2user
-        self.id2item = data.id2item
-
-        # loop for n_epochs
-        for epoch_count in range(1, self.n_epochs + 1):
-
-            # negative sampling for training
-            train_begin = time()
-            data.negative_sampling()
-
-            # initialize
-            train_loss = []
-
-            # calculate loss and update NCF parameters
-            for user_input, item_input, labels in data.train_loader(self.batch_size):
-
-                user_input = np.array([self.user2id[x] for x in user_input])
-                item_input = np.array([self.item2id[x] for x in item_input])
-                labels = np.array(labels)
-
-                feed_dict = {
-                    self.user_input: user_input[..., None],
-                    self.item_input: item_input[..., None],
-                    self.labels: labels[..., None],
-                }
-
-                # get loss and execute optimization
-                loss, _ = self.sess.run([self.loss, self.optimizer], feed_dict)
-                train_loss.append(loss)
-            train_time = time() - train_begin
-
-            # output every self.verbose
-            if self.verbose and epoch_count % self.verbose == 0:
-                logger.info(
-                    "Epoch %d [%.2fs]: train_loss = %.6f "
-                    % (epoch_count, train_time, sum(train_loss) / len(train_loss))
-                )
-
     def predict(self, user_input, item_input, is_list=False):
         """Predict function of this trained model
 
@@ -447,5 +400,65 @@ class NCF:
             self.item_input: item_input[..., None],
         }
 
+        # print(feed_dict)
+
         # calculate predicted score
         return self.sess.run(self.output, feed_dict)
+
+    def fit(self, data):
+        """Fit model with training data
+
+        Args:
+            data (NCFDataset): initilized Dataset in ./dataset.py
+        """
+
+        # get user and item mapping dict
+        self.user2id = data.user2id
+        self.item2id = data.item2id
+        self.id2user = data.id2user
+        self.id2item = data.id2item
+
+        # loop for n_epochs
+        plt_loss = []
+        for epoch_count in range(1, self.n_epochs + 1):
+
+            # negative sampling for training
+            train_begin = time()
+            data.negative_sampling()
+
+            # initialize
+            train_loss = []
+            # calculate loss and update NCF parameters
+            for user_input, item_input, labels in data.train_loader(self.batch_size):
+                user_input = np.array([self.user2id[x] for x in user_input])
+                item_input = np.array([self.item2id[x] for x in item_input])
+                labels = np.array(labels)
+
+                feed_dict = {
+                    self.user_input: user_input[..., None],
+                    self.item_input: item_input[..., None],
+                    self.labels: labels[..., None],
+                }
+
+                # get loss and execute optimization
+                loss, _ = self.sess.run([self.loss, self.optimizer], feed_dict)
+                train_loss.append(loss)
+
+            plt_loss.append(sum(train_loss) / len(train_loss))
+            train_time = time() - train_begin
+            # np.save('Error_'+self.model_type, plt_loss)
+
+            epoch_array = [i for i in range(epoch_count)]
+            plt.plot(np.array(epoch_array),np.array(plt_loss))
+            plt.xlabel('Epoch')
+            plt.ylabel('Training loss')
+            plt.show()
+            # plt.savefig('Error.png')
+            # self.save('model_checkpoint')
+            # output every self.verbose
+            if self.verbose and epoch_count % self.verbose == 0:
+                logger.info(
+                    "Epoch %d [%.2fs]: train_loss = %.6f "
+                    % (epoch_count, train_time, sum(train_loss) / len(train_loss))
+                )
+

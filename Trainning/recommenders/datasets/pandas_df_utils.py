@@ -402,7 +402,7 @@ def has_same_base_dtype(df_1, df_2, columns=None):
 
     result = True
     for column in columns:
-        if df_1[column].dtype.type.__base__ != df_2[column].dtype.type.__base__:
+        if df_1[column].dtype.modelType.__base__ != df_2[column].dtype.modelType.__base__:
             logger.error("Columns {} do not have the same base datatype".format(column))
             result = False
 

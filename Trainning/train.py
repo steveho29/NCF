@@ -21,11 +21,11 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("ncf")
 
 
-def loadModel(dataset: NCFDataset, n_epochs=10, learning_rate=5e-3, n_factors=8, checkPoint=None):
+def loadModel(dataset: NCFDataset, model_type, n_epochs=10, learning_rate=5e-3, n_factors=8, checkPoint=None):
     model = NCF(
         n_users=dataset.n_users,
         n_items=dataset.n_items,
-        model_type="NeuMF",
+        model_type=model_type,
 
         n_epochs=n_epochs,
         learning_rate=learning_rate,
@@ -39,24 +39,36 @@ def loadModel(dataset: NCFDataset, n_epochs=10, learning_rate=5e-3, n_factors=8,
     return model
 
 
-def ncf_training(model: NCF, dataset: NCFDataset, checkPoint):
+def ncf_training(model: NCF, dataset: NCFDataset, checkPoint=None):
     """
     Training NCF Model
     """
     logger.info("Start training...")
     model.fit(dataset)
-    model.save(checkPoint)
+    if checkPoint:
+        model.save(checkPoint)
     logger.info("Finished Training")
     return model
 
 
 def calculate_metrics(model, test_data, metrics_filename):
+    # test_data = NCFDataset(validate=test_data)
+    # model.user2id = test_data.user2id
+    # model.item2id = test_data.item2id
+    # model.id2user = test_data.id2user
+    # model.id2item = test_data.id2item
+
     metrics_dict = {}
+
     rating_metrics = evaluation.metrics
-    predictions = [
-        [row.userID, row.itemID, model.predict(row.userID, row.itemID)]
-        for (_, row) in test_data.iterrows()
-    ]
+    # predictions = [
+    #     [row.userID, row.itemID, model.predict(row.userID, row.itemID)]
+    #     for (_, row) in test_data.iterrows()
+    # ]
+
+    userID = 99
+    itemID = 377
+    predictions = [[userID, itemID, model.predict(userID, itemID)]]
     predictions = pd.DataFrame(
         predictions, columns=["userID", "itemID", "prediction"]
     )
@@ -77,17 +89,22 @@ def calculate_metrics(model, test_data, metrics_filename):
 
 
 if __name__ == "__main__":
-    check_point = 'model_checkpoint'
-    train_data = pd.read_csv('../data/ml-100k/u.data', delimiter='\t', names=DEFAULT_HEADER)
-    test_data = pd.read_csv('../data/ml-100k/u1.test', delimiter='\t', names=DEFAULT_HEADER)
-    validation_data = pd.read_csv('../data/ml-100k/u2.test', delimiter='\t', names=DEFAULT_HEADER)
-    data = NCFDataset(train=train_data, seed=DEFAULT_SEED)
+    model_type = ['neumf', 'gmf', 'mlp']
+    for modelType in model_type:
+        # check_point = 'model_checkpoint_' + modelType
+        check_point = None
+        train_data = pd.read_csv('../data/ml-100k/u.data', delimiter='\t', names=DEFAULT_HEADER)
+        test_data = pd.read_csv('../data/ml-100k/u1.test', delimiter='\t', names=DEFAULT_HEADER)
+        print(test_data)
+        validation_data = pd.read_csv('../data/ml-100k/u2.test', delimiter='\t', names=DEFAULT_HEADER)
+        data = NCFDataset(train=train_data, seed=DEFAULT_SEED)
 
-    # Create Model and Load the Parameters Checkpoint if exists
-    model = loadModel(dataset=data, n_epochs=1, learning_rate=5e-3, n_factors=8, checkPoint=check_point)
+        # Create Model and Load the Parameters Checkpoint if exists
+        model = loadModel(dataset=data, model_type=modelType, n_epochs=0, learning_rate=5e-3, n_factors=8,
+                          checkPoint=None)
 
-    # Training model
-    ncf_training(model, dataset=data, checkPoint=check_point)
+        # Training model
+        ncf_training(model, dataset=data, checkPoint=None)
 
-    # Model Evaluation with metrics
-    calculate_metrics(model=model, test_data=test_data, metrics_filename='metrics.json')
+        # Model Evaluation with metrics
+        calculate_metrics(model=model, test_data=test_data, metrics_filename='metrics_' + modelType + '.json')
