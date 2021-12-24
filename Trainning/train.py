@@ -61,14 +61,14 @@ def calculate_metrics(model, test_data, metrics_filename):
     metrics_dict = {}
 
     rating_metrics = evaluation.metrics
-    # predictions = [
-    #     [row.userID, row.itemID, model.predict(row.userID, row.itemID)]
-    #     for (_, row) in test_data.iterrows()
-    # ]
+    predictions = [
+        [row.userID, row.itemID, model.predict(row.userID, row.itemID)]
+        for (_, row) in test_data.iterrows()
+    ]
 
-    userID = 99
-    itemID = 377
-    predictions = [[userID, itemID, model.predict(userID, itemID)]]
+    # userID = 99
+    # itemID = 377
+    # predictions = [[userID, itemID, model.predict(userID, itemID)]]
     predictions = pd.DataFrame(
         predictions, columns=["userID", "itemID", "prediction"]
     )
@@ -89,8 +89,8 @@ def calculate_metrics(model, test_data, metrics_filename):
 
 
 if __name__ == "__main__":
-    # model_type = ['neumf', 'gmf', 'mlp']
-    model_type = ['mlp']
+    model_type = ['neumf', 'gmf']
+    # model_type = ['mlp']
     for modelType in model_type:
         check_point = 'model_checkpoint_' + modelType
         # check_point = None
@@ -102,7 +102,7 @@ if __name__ == "__main__":
 
         # Create Model and Load the Parameters Checkpoint if exists
         model = loadModel(dataset=data, model_type=modelType, n_epochs=0, learning_rate=5e-3, n_factors=8,
-                          checkPoint=None)
+                          checkPoint=check_point)
 
         # Training model
         ncf_training(model, dataset=data, checkPoint=check_point)
