@@ -89,13 +89,14 @@ def calculate_metrics(model, test_data, metrics_filename):
 
 
 if __name__ == "__main__":
-    model_type = ['neumf', 'gmf', 'mlp']
+    # model_type = ['neumf', 'gmf', 'mlp']
+    model_type = ['mlp']
     for modelType in model_type:
-        # check_point = 'model_checkpoint_' + modelType
-        check_point = None
+        check_point = 'model_checkpoint_' + modelType
+        # check_point = None
         train_data = pd.read_csv('../data/ml-100k/u.data', delimiter='\t', names=DEFAULT_HEADER)
         test_data = pd.read_csv('../data/ml-100k/u1.test', delimiter='\t', names=DEFAULT_HEADER)
-        print(test_data)
+        # print(test_data)
         validation_data = pd.read_csv('../data/ml-100k/u2.test', delimiter='\t', names=DEFAULT_HEADER)
         data = NCFDataset(train=train_data, seed=DEFAULT_SEED)
 
@@ -104,7 +105,7 @@ if __name__ == "__main__":
                           checkPoint=None)
 
         # Training model
-        ncf_training(model, dataset=data, checkPoint=None)
+        ncf_training(model, dataset=data, checkPoint=check_point)
 
         # Model Evaluation with metrics
         calculate_metrics(model=model, test_data=test_data, metrics_filename='metrics_' + modelType + '.json')

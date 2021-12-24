@@ -24,6 +24,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\App\app.py">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\App\streamlit.py">
           <value>
             <Attribute>

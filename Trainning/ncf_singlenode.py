@@ -445,8 +445,9 @@ class NCF:
                 train_loss.append(loss)
 
             plt_loss.append(sum(train_loss) / len(train_loss))
+
             train_time = time() - train_begin
-            # np.save('Error_'+self.model_type, plt_loss)
+            np.save('Error_'+self.model_type, plt_loss)
 
             epoch_array = [i for i in range(epoch_count)]
             plt.plot(np.array(epoch_array),np.array(plt_loss))

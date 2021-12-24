@@ -87,6 +87,12 @@ def filedownload(df, name):
 
 st.markdown(filedownload(df_train_data_selected, "Group8 - MovieLens 100k Dataset.csv"), unsafe_allow_html=True)
 
+st.header('Training Loss')
+neumf_error = np.load('Error_neumf.npy')
+gmf_error = np.load('Error_gmf.npy')
+st.line_chart(pd.DataFrame(np.array([gmf_error, neumf_error]).T, columns=["GMF", "NeuMF"]))
+
+
 # Heatmap
 # if st.button('Intercorrelation Heatmap'):
 #     st.header('Intercorrelation Matrix Heatmap')
