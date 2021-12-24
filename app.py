@@ -31,10 +31,10 @@ st.sidebar.header('User Input Features')
 
 @st.cache
 def load_train_data():
-    train_data = pd.read_csv('../data/ml-100k/u.data', delimiter='\t', names=DEFAULT_HEADER)
+    train_data = pd.read_csv('data/ml-100k/u.data', delimiter='\t', names=DEFAULT_HEADER)
     train_data['timestamp'] = train_data['timestamp'].apply(lambda x: datetime.datetime.fromtimestamp(x))
     train_data.sort_values(by=['userID', 'itemID'], ascending=[True, True])
-    user_data = pd.read_csv('../data/ml-100k/u.user', delimiter='|',
+    user_data = pd.read_csv('data/ml-100k/u.user', delimiter='|',
                             names=["userID", "age", "gender", "occupation", "zip-code"])
 
     movie_columns = ['itemID', 'movie_title', 'release_date', 'date',
@@ -43,7 +43,7 @@ def load_train_data():
                      'Film-Noir', 'Horror', 'Musical', 'Mystery', 'Romance', 'Sci-Fi',
                      'Thriller', 'War', 'Western']
     genre_columns = movie_columns[5:]
-    item_data = pd.read_csv('../data/ml-100k/u.item', encoding='cp1252', delimiter='|', names=movie_columns)
+    item_data = pd.read_csv('data/ml-100k/u.item', encoding='cp1252', delimiter='|', names=movie_columns)
     item_data = item_data.drop(columns=['date'])
     item_data = item_data.assign(genre=item_data.filter(genre_columns).pipe(lambda d: d.columns[d.values.argmax(1)]))
     item_data = item_data.drop(columns=genre_columns)
