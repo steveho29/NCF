@@ -130,4 +130,3 @@ widgetsnbextension==3.5.2
 wrapt==1.13.3
 zipp==3.6.0
 
-tensorflow~=2.7.0
