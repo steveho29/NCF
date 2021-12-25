@@ -17,7 +17,7 @@ st.title('Group 8')
 st.title('Recommender System')
 st.title('Neural Collaborative Filtering')
 st.markdown("""
-This projects use Movilens 100K dataset!
+This projects use Movielens 100K dataset!
 * **Python libraries:** base64, pandas, streamlit, numpy, matplotlib, seaborn
 * **Paper Source:** [paperswithcode.com](https://paperswithcode.com/paper/neural-collaborative-filtering)
 * **Model reference:** [github.com/microsoft](https://github.com/microsoft/recommenders)
@@ -27,7 +27,11 @@ st.sidebar.header('User Input Features')
 
 
 # selected_year = st.sidebar.selectbox('Year', list(reversed(range(1990,2020))))
-
+def filedownload(df, name):
+    csv = df.to_csv(index=False)
+    b64 = base64.b64encode(csv.encode()).decode()  # strings <-> bytes conversions
+    href = f'<a href="data:file/csv;base64,{b64}" download="{name}.csv">Download CSV File</a>'
+    return href
 
 @st.cache
 def load_train_data():
@@ -55,10 +59,10 @@ def load_train_data():
 
 train_data = load_train_data()
 
-genre = sorted(train_data['genre'].unique())
+genre_data = sorted(train_data['genre'].unique())
 
 # Sidebar - Genre selection
-selected_genre = st.sidebar.multiselect('Movie Genres', genre, genre)
+selected_genre = st.sidebar.multiselect('Movie Genres', genre_data, genre_data)
 
 # Sidebar - Rate selection
 rating = [i for i in range(1, 6)]
@@ -72,21 +76,21 @@ st.header('Dataset Movielens 100k Ratings')
 st.write('Collected from 943 Users - 1682 Movies')
 st.write('Data Dimension: ' + str(df_train_data_selected.shape[0]) + ' rows and ' + str(
     df_train_data_selected.shape[1]) + ' columns.')
+des = train_data.describe().drop(columns=['userID', 'itemID'])[:2]
 
 st.dataframe(df_train_data_selected)
+st.write('Description: ')
+st.dataframe(des.astype(dtype=int))
+
+genre_bar_chart = [(len(train_data[train_data['genre'] == genre]))for genre in genre_data]
+genre_bar_chart = pd.DataFrame(np.array(genre_bar_chart).reshape(1, len(genre_data)), columns=genre_data)
+st.bar_chart(genre_bar_chart)
 
 
-# Download NBA player stats data
-# https://discuss.streamlit.io/t/how-to-download-file-in-streamlit/1806
-def filedownload(df, name):
-    csv = df.to_csv(index=False)
-    b64 = base64.b64encode(csv.encode()).decode()  # strings <-> bytes conversions
-    href = f'<a href="data:file/csv;base64,{b64}" download="{name}.csv">Download CSV File</a>'
-    return href
-
-
+# -------------- DOWNLOAD BUTTON -----------------
 st.markdown(filedownload(df_train_data_selected, "Group8 - MovieLens 100k Dataset.csv"), unsafe_allow_html=True)
 
+# -------------- TRAINING LOSS LINE CHART-----------------
 st.header('Training Loss')
 neumf_error = np.load('Error_neumf.npy')
 gmf_error = np.load('Error_gmf.npy')
