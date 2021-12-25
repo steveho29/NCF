@@ -10,8 +10,14 @@ import base64
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-
+from PIL import Image
+import requests
+import io
 from constants import DEFAULT_HEADER
+
+
+
+
 
 st.title('Group 8')
 st.title('Recommender System')
@@ -26,7 +32,6 @@ This projects use Movielens 100K dataset!
 st.sidebar.header('User Input Features')
 
 
-# selected_year = st.sidebar.selectbox('Year', list(reversed(range(1990,2020))))
 def filedownload(df, name):
     csv = df.to_csv(index=False)
     b64 = base64.b64encode(csv.encode()).decode()  # strings <-> bytes conversions
@@ -55,6 +60,10 @@ def load_train_data():
     train_data = train_data.join(user_data.set_index('userID'), on='userID')
     train_data = train_data.join(item_data.set_index('itemID'), on='itemID')
     return train_data
+
+
+def getImage(url):
+    return Image.open(io.BytesIO(requests.get(url).content))
 
 
 train_data = load_train_data()
@@ -110,3 +119,5 @@ st.line_chart(pd.DataFrame(np.array([gmf_error, neumf_error]).T, columns=["GMF",
 #         f, ax = plt.subplots(figsize=(7, 5))
 #         ax = sns.heatmap(corr, mask=mask, vmax=1, square=True)
 #     st.pyplot()
+selected_user = st.sidebar.selectbox('UserID', sorted(train_data['userID'].unique()))
+
