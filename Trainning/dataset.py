@@ -1,14 +1,14 @@
 """
 @author: Minh Duc
 @since: 12/21/2021 5:21 PM
-@description: 
+@description:
 @update:
-""" 
+"""
 import random
 import numpy as np
 import pandas as pd
 import warnings
-from Trainning.recommenders.utils.constants import (
+from .recommenders.utils.constants import (
     DEFAULT_ITEM_COL,
     DEFAULT_USER_COL,
     DEFAULT_RATING_COL,

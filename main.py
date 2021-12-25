@@ -1,3 +1,3 @@
 
-from Trainning.train import ncf_training
+from Training.train import ncf_training
 

@@ -4,6 +4,7 @@
 @description:
 @update:
 """
+
 import json
 import logging
 import os
@@ -45,19 +46,13 @@ def ncf_training(model: NCF, dataset: NCFDataset, checkPoint=None):
     """
     logger.info("Start training...")
     model.fit(dataset)
-    if checkPoint:
-        model.save(checkPoint)
+    # if checkPoint:
+    #     model.save(checkPoint)
     logger.info("Finished Training")
     return model
 
 
 def calculate_metrics(model, test_data, metrics_filename):
-    # test_data = NCFDataset(validate=test_data)
-    # model.user2id = test_data.user2id
-    # model.item2id = test_data.item2id
-    # model.id2user = test_data.id2user
-    # model.id2item = test_data.id2item
-
     metrics_dict = {}
 
     rating_metrics = evaluation.metrics
@@ -65,10 +60,6 @@ def calculate_metrics(model, test_data, metrics_filename):
         [row.userID, row.itemID, model.predict(row.userID, row.itemID)]
         for (_, row) in test_data.iterrows()
     ]
-
-    # userID = 99
-    # itemID = 377
-    # predictions = [[userID, itemID, model.predict(userID, itemID)]]
     predictions = pd.DataFrame(
         predictions, columns=["userID", "itemID", "prediction"]
     )
@@ -83,20 +74,40 @@ def calculate_metrics(model, test_data, metrics_filename):
     # nni.report_final_result(metrics_dict)
 
     # Save the metrics in a JSON file
-    with open(metrics_filename, "w") as fp:
-        temp_dict = metrics_dict.copy()
-        json.dump(temp_dict, fp)
+    if metrics_filename:
+        with open(metrics_filename, "w") as fp:
+            temp_dict = metrics_dict.copy()
+            json.dump(temp_dict, fp)
+
+
+def predict(userID, itemIDList):
+    train_data = pd.read_csv('../data/ml-100k/u.data', delimiter='\t', names=DEFAULT_HEADER)
+    test_data = pd.read_csv('../data/ml-100k/u1.test', delimiter='\t', names=DEFAULT_HEADER)
+    dataset = NCFDataset(train=train_data, seed=DEFAULT_SEED)
+    model = NCF(
+        n_users=dataset.n_users,
+        n_items=dataset.n_items,
+        n_epochs=1,
+        model_type="NeuMF",
+        seed=DEFAULT_SEED,
+    )
+    model.load(neumf_dir='model_checkpoint_neumf')
+    # model.setData(dataset)
+    model.fit(dataset)
+    calculate_metrics(model=model, test_data=test_data, metrics_filename=None)
+
+    predictions = {}
+    for itemID in itemIDList:
+        predictions[itemID] = model.predict(userID, itemID)
+    return dict(sorted(predictions.items(), key=lambda x:x[1]))
 
 
 if __name__ == "__main__":
-    model_type = ['neumf', 'gmf']
-    # model_type = ['mlp']
+    model_type = ['neumf gmf']
     for modelType in model_type:
         check_point = 'model_checkpoint_' + modelType
-        # check_point = None
         train_data = pd.read_csv('../data/ml-100k/u.data', delimiter='\t', names=DEFAULT_HEADER)
         test_data = pd.read_csv('../data/ml-100k/u1.test', delimiter='\t', names=DEFAULT_HEADER)
-        # print(test_data)
         validation_data = pd.read_csv('../data/ml-100k/u2.test', delimiter='\t', names=DEFAULT_HEADER)
         data = NCFDataset(train=train_data, seed=DEFAULT_SEED)
 
@@ -109,3 +120,4 @@ if __name__ == "__main__":
 
         # Model Evaluation with metrics
         calculate_metrics(model=model, test_data=test_data, metrics_filename='metrics_' + modelType + '.json')
+
