@@ -1,4 +1,5 @@
-# NCF
+# Neural Collaborative Filtering
+
  Deploy on https://group8-ncf.herokuapp.com/
 ![image](https://user-images.githubusercontent.com/64053044/147401167-d802386c-31fa-447f-b6d3-ff2efd768890.png)
 ![image](https://user-images.githubusercontent.com/64053044/147401175-5d3eb2bc-6573-4fee-8827-63d1923e63cb.png)
