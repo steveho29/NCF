@@ -1,5 +1,9 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License.
+"""
+@author: Minh Duc
+@since: 12/15/2021 12:20 PM
+@description:
+@update:
+"""
 
 import os
 import numpy as np
@@ -7,11 +11,19 @@ import tensorflow as tf
 import tf_slim as slim
 from time import time
 import logging
-
+import matplotlib.pyplot as plt
 
 tf.compat.v1.disable_eager_execution()
 logger = logging.getLogger(__name__)
 MODEL_CHECKPOINT = "model.ckpt"
+
+"""
+    This is the original model. I reused and changed little things
+    I respectfully keep all the author citation
+    -- Minh Duc --
+"""
+
+
 
 
 class NCF:
@@ -365,11 +377,13 @@ class NCF:
             ncf_fc, tf.concat([alpha * gmf_fc, (1 - alpha) * mlp_fc], axis=0)
         )
         self.sess.run(assign_op)
+
     def setData(self, data):
         self.user2id = data.user2id
         self.item2id = data.item2id
         self.id2user = data.id2user
         self.id2item = data.id2item
+
     def fit(self, data):
         """Fit model with training data
 
@@ -381,6 +395,7 @@ class NCF:
 
         self.setData(data)
         # loop for n_epochs
+        losses = []
         for epoch_count in range(1, self.n_epochs + 1):
 
             # negative sampling for training
@@ -408,6 +423,10 @@ class NCF:
                 train_loss.append(loss)
             train_time = time() - train_begin
 
+            losses.append(sum(train_loss) / len(train_loss))
+            np.save("Error_"+self.model_type+".npy",losses)
+            plt.plot(losses)
+            plt.show()
             # output every self.verbose
             if self.verbose and epoch_count % self.verbose == 0:
                 logger.info(

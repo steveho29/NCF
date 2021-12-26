@@ -34,9 +34,17 @@ def loadModel(dataset: NCFDataset, model_type, n_epochs=10, learning_rate=5e-3, 
 
         seed=DEFAULT_SEED,
     )
-    if checkPoint:
-        model.load(neumf_dir=checkPoint)
 
+    model.setData(dataset)
+    if checkPoint:
+        if model_type == "neumf":
+            model.load(neumf_dir=checkPoint)
+        elif model_type == "gmf":
+            model.load(gmf_dir=checkPoint)
+        elif model_type == "mlp":
+            model.load(mlp_dir=checkPoint)
+        else:
+            raise "ModelType Invalid"
     return model
 
 
@@ -70,8 +78,8 @@ def calculate_metrics(model, test_data, metrics_filename):
     for metric in rating_metrics:
         result = getattr(evaluation, metric)(test_data, predictions)
         metrics_dict[metric] = result
-    print(metrics_dict)
-    # nni.report_final_result(metrics_dict)
+    # print(metrics_dict)
+    nni.report_final_result(metrics_dict)
 
     # Save the metrics in a JSON file
     if metrics_filename:
@@ -80,43 +88,22 @@ def calculate_metrics(model, test_data, metrics_filename):
             json.dump(temp_dict, fp)
 
 
-def predict(userID, itemIDList):
-    train_data = pd.read_csv('../data/ml-100k/u.data', delimiter='\t', names=DEFAULT_HEADER)
-    test_data = pd.read_csv('../data/ml-100k/u1.test', delimiter='\t', names=DEFAULT_HEADER)
-    dataset = NCFDataset(train=train_data, seed=DEFAULT_SEED)
-    model = NCF(
-        n_users=dataset.n_users,
-        n_items=dataset.n_items,
-        n_epochs=1,
-        model_type="NeuMF",
-        seed=DEFAULT_SEED,
-    )
-    model.load(neumf_dir='model_checkpoint_neumf')
-    # model.setData(dataset)
-    model.fit(dataset)
-    calculate_metrics(model=model, test_data=test_data, metrics_filename=None)
-
-    predictions = {}
-    for itemID in itemIDList:
-        predictions[itemID] = model.predict(userID, itemID)
-    return dict(sorted(predictions.items(), key=lambda x:x[1]))
-
-
 if __name__ == "__main__":
-    model_type = ['neumf gmf']
+    model_type = ['neumf', 'gmf', 'mlp']
     for modelType in model_type:
         check_point = 'model_checkpoint_' + modelType
-        train_data = pd.read_csv('../data/ml-100k/u.data', delimiter='\t', names=DEFAULT_HEADER)
-        test_data = pd.read_csv('../data/ml-100k/u1.test', delimiter='\t', names=DEFAULT_HEADER)
-        validation_data = pd.read_csv('../data/ml-100k/u2.test', delimiter='\t', names=DEFAULT_HEADER)
-        data = NCFDataset(train=train_data, seed=DEFAULT_SEED)
+        train_data = pd.read_csv('data/ml-100k/u.data', delimiter='\t', names=DEFAULT_HEADER)
+        test_data = pd.read_csv('data/ml-100k/u1.test', delimiter='\t', names=DEFAULT_HEADER)
+        validation_data = pd.read_csv('data/ml-100k/u2.test', delimiter='\t', names=DEFAULT_HEADER)
+        data = NCFDataset(train=train_data, validate=validation_data, seed=DEFAULT_SEED)
 
         # Create Model and Load the Parameters Checkpoint if exists
         model = loadModel(dataset=data, model_type=modelType, n_epochs=0, learning_rate=5e-3, n_factors=8,
                           checkPoint=check_point)
 
         # Training model
-        ncf_training(model, dataset=data, checkPoint=check_point)
+        # Comment this line if You want evaluate model without training
+        # ncf_training(model, dataset=data, checkPoint=check_point)
 
         # Model Evaluation with metrics
         calculate_metrics(model=model, test_data=test_data, metrics_filename='metrics_' + modelType + '.json')
