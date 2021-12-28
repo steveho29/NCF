@@ -6,6 +6,8 @@
 """
 
 import os
+import sys
+
 import numpy as np
 import tensorflow as tf
 import tf_slim as slim
@@ -22,9 +24,6 @@ MODEL_CHECKPOINT = "model.ckpt"
     I respectfully keep all the author citation
     -- Minh Duc --
 """
-
-
-
 
 class NCF:
     """Neural Collaborative Filtering (NCF) implementation
@@ -200,13 +199,12 @@ class NCF:
 
             # concatenate user and item vector
             output = tf.concat([self.mlp_p, self.mlp_q], 1)
-
             # MLP Layers
             for layer_size in self.layer_sizes[1:]:
                 output = slim.layers.fully_connected(
                     output,
                     num_outputs=layer_size,
-                    activation_fn=tf.nn.relu,
+                    activation_fn=tf.nn.sigmoid,
                     weights_initializer=tf.compat.v1.keras.initializers.VarianceScaling(
                         scale=1.0,
                         mode="fan_avg",
@@ -407,7 +405,6 @@ class NCF:
 
             # calculate loss and update NCF parameters
             for user_input, item_input, labels in data.train_loader(self.batch_size):
-
                 user_input = np.array([self.user2id[x] for x in user_input])
                 item_input = np.array([self.item2id[x] for x in item_input])
                 labels = np.array(labels)
@@ -418,13 +415,14 @@ class NCF:
                     self.labels: labels[..., None],
                 }
 
+
                 # get loss and execute optimization
                 loss, _ = self.sess.run([self.loss, self.optimizer], feed_dict)
                 train_loss.append(loss)
             train_time = time() - train_begin
 
             losses.append(sum(train_loss) / len(train_loss))
-            np.save("Error_"+self.model_type+".npy",losses)
+            np.save("Error_"+self.model_type+"_sigmoid.npy",losses)
             plt.plot(losses)
             plt.show()
             # output every self.verbose

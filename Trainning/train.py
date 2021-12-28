@@ -54,8 +54,8 @@ def ncf_training(model: NCF, dataset: NCFDataset, checkPoint=None):
     """
     logger.info("Start training...")
     model.fit(dataset)
-    # if checkPoint:
-    #     model.save(checkPoint)
+    if checkPoint:
+        model.save(checkPoint)
     logger.info("Finished Training")
     return model
 
@@ -89,7 +89,7 @@ def calculate_metrics(model, test_data, metrics_filename):
 
 
 if __name__ == "__main__":
-    model_type = ['neumf', 'gmf', 'mlp']
+    model_type = ['gmf', 'mlp', 'neumf']
     for modelType in model_type:
         check_point = 'model_checkpoint_' + modelType
         train_data = pd.read_csv('data/ml-100k/u.data', delimiter='\t', names=DEFAULT_HEADER)
@@ -98,12 +98,12 @@ if __name__ == "__main__":
         data = NCFDataset(train=train_data, validate=validation_data, seed=DEFAULT_SEED)
 
         # Create Model and Load the Parameters Checkpoint if exists
-        model = loadModel(dataset=data, model_type=modelType, n_epochs=0, learning_rate=5e-3, n_factors=8,
+        model = loadModel(dataset=data, model_type=modelType, n_epochs=100, learning_rate=5e-3, n_factors=8,
                           checkPoint=check_point)
 
         # Training model
         # Comment this line if You want evaluate model without training
-        # ncf_training(model, dataset=data, checkPoint=check_point)
+        ncf_training(model, dataset=data, checkPoint=check_point)
 
         # Model Evaluation with metrics
         calculate_metrics(model=model, test_data=test_data, metrics_filename='metrics_' + modelType + '.json')
